@@ -5,3 +5,8 @@ Dropbox clone criado para estudo utilizando como base as aulas do [Curso de Java
 
 ### Visual do projeto
 ![DropBox Clone](https://firebasestorage.googleapis.com/v0/b/hcode-com-br.appspot.com/o/DropBoxClone.jpg?alt=media&token=d59cad0c-440d-4516-88f2-da904b9bb443)
+
+**Coisas interessantes abordadas neste projeto.**
+- [Formidable](https://github.com/felixge/node-formidable).
+- Barra de progresso de upload.
+- Cálculo para quanto tempo resta para finalizar um upload.
