@@ -61,4 +61,4 @@ typings/
 .next
 
 # conteúdo da pasta de uploads
-upload/*
+.upload/*
