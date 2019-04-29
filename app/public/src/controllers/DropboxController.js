@@ -24,6 +24,16 @@ class DropboxController
         new ConnectFirebase();
     }
 
+    /**
+     * Pega uma referência ao firebase que já está global por causa dos imports no html
+     * e configurações do ConnectFirebase.
+     * 
+     * @return Referência a um nó do banco de dados no Firebase.
+     */
+    getFirebaseRef() {
+        return firebase.database().ref('files');
+    }
+
     initEvents() {
         // botão de envio
         this.btnSendFileEl.addEventListener('click', event => {
@@ -32,14 +42,25 @@ class DropboxController
 
         // input file
         this.inputFilesEl.addEventListener('change', event => {
+
+            // desabilita o botão pra evitar complicações
+            this.btnSendFileEl.disabled = true;
             
-            this.uploadTasks(event.target.files);
+            this.uploadTasks(event.target.files).then(responses => {
+                responses.forEach(resp => {
+                    // Nota: resp.files['input-file'] retorna um json com os dados do arquivo
+                    this.getFirebaseRef().push().set(resp.files['input-file']);
+                });
+
+                this.uploadComplete();
+            }).catch(err => {
+                
+                this.uploadComplete();
+                console.error(err);
+            });
 
             // mostra na tela
             this.modalShow();
-
-            // restart no evento 'change'
-            this.inputFilesEl.value = '';
         });
     }
 
@@ -72,7 +93,6 @@ class DropboxController
                 ajax.open('POST', '/upload');
 
                 ajax.onload = event => {
-                    this.modalShow(false);
 
                     try {
                         resolve(JSON.parse(ajax.responseText));
@@ -83,8 +103,6 @@ class DropboxController
 
                 ajax.onerror = event => {
                     
-                    this.modalShow(false);
-
                     reject(event);
                 };
 
@@ -131,6 +149,20 @@ class DropboxController
 
         // mostra o tempo que ainda resta para o progresso acabar
         this.timeLeftEl.innerHTML = this.formatTimeToHuman(timeleft);
+    }
+
+    /**
+     * Trata do momento em que completa o upload dos arquivos.
+     */
+    uploadComplete() {
+        // fecha o modal com a barra de loading
+        this.modalShow(false);
+
+        // restart no evento 'change'
+        this.inputFilesEl.value = '';
+
+        // habilita o botão novamente
+        this.btnSendFileEl.disabled = false;
     }
 
     /**

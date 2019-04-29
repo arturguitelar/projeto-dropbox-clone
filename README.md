@@ -10,3 +10,4 @@ Dropbox clone criado para estudo utilizando como base as aulas do [Curso de Java
 - [Formidable](https://github.com/felixge/node-formidable).
 - Barra de progresso de upload.
 - Cálculo para quanto tempo resta para finalizar um upload.
+- [Firebase](https://firebase.google.com).
