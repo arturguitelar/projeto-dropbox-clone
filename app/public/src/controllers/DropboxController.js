@@ -5,18 +5,23 @@ class DropboxController
         this.btnSendFileEl = document.querySelector('#btn-send-file');
         this.inputFilesEl = document.querySelector('#files');
         this.snackModalEl = document.querySelector('#react-snackbar-root');
-        this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg')
-        this.fileNameEl = this.snackModalEl.querySelector('.filename')
-        this.timeLeftEl = this.snackModalEl.querySelector('.timeleft')
+        this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg');
+        this.fileNameEl = this.snackModalEl.querySelector('.filename');
+        this.timeLeftEl = this.snackModalEl.querySelector('.timeleft');
+        this.listFilesEl = document.querySelector('#list-of-files-and-directories');
 
         // methods
         this.connectFirebase();
         this.initEvents();
+        this.readFiles();
     }
 
+    /**
+     * Configura uma conexão com o Firebase.
+     */
     connectFirebase() {
         /**
-         * Esta classe não estará disponível no projeto por questões
+         * A classe ConnectFirebase não estará disponível no projeto por questões
          * de segurança.
          * Basicamente é um classe simpes com as configurações do 
          * meu banco de dados no Firebase no construtor.
@@ -34,6 +39,28 @@ class DropboxController
         return firebase.database().ref('files');
     }
 
+    /**
+     * Lê os arquivos no banco.
+     */
+    readFiles() {
+        // Nota: neste caso o .on() se encarrega de "ouvir" o evento de alteração no banco.
+        this.getFirebaseRef().on('value', snapshot => {
+            
+            this.listFilesEl.innerHTML = '';
+
+            snapshot.forEach(snapshotItem => {
+                let key = snapshotItem.key;
+                let data = snapshotItem.val();
+
+                // cria as li's com cada referência de arquivo
+                this.listFilesEl.appendChild(this.getFileView(data, key));
+            });
+        });
+    }
+
+    /**
+     * Inicia eventos necessários para o funcionamento da aplicação.
+     */
     initEvents() {
         // botão de envio
         this.btnSendFileEl.addEventListener('click', event => {
@@ -54,7 +81,7 @@ class DropboxController
 
                 this.uploadComplete();
             }).catch(err => {
-                
+
                 this.uploadComplete();
                 console.error(err);
             });
@@ -196,15 +223,20 @@ class DropboxController
      * uma view html correspondente.
      * 
      * @param {*} file Tipo de arquivo.
-     * @return {String} HTML.
+     * @param {*} key ID ou chave do arquivo.
+     * @return {HTMLElement} HTML.
      */
-    getFileView(file) {
-        return `
-            <li>
-                ${this.getFileIconView(file)}
-                <div class="name text-center">${file.name}</div>
-            </li>
+    getFileView(file, key) {
+
+        let li = document.createElement('li');
+        li.dataset.key = key;
+
+        li. innerHTML = `
+            ${this.getFileIconView(file)}
+            <div class="name text-center">${file.name}</div>
         `;
+        
+        return li;
     }
 
     /**
