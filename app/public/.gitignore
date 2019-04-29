@@ -59,3 +59,6 @@ typings/
 
 # next.js build output
 .next
+
+# dados de conexão com o firebase
+ConnectFirebase.js
