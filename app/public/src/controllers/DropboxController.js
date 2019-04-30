@@ -48,6 +48,24 @@ class DropboxController
             }
         });
 
+        // botão de renomear
+        this.btnRenameEl.addEventListener('click', event => {
+            let li = this.getSelection()[0];
+
+            // pegando os dados do li selecionado
+            let file = JSON.parse(li.dataset.file);
+
+            // pergunta ao usuário via prompt
+            let name = prompt('Renomear arquivo:', file.name);
+
+            // salva no Firebase
+            if (name) {
+                file.name = name;
+
+                this.getFirebaseRef().child(li.dataset.key).set(file);
+            }
+        });
+
         // botão de envio
         this.btnSendFileEl.addEventListener('click', event => {
             this.inputFilesEl.click();
@@ -321,6 +339,7 @@ class DropboxController
 
         let li = document.createElement('li');
         li.dataset.key = key;
+        li.dataset.file = JSON.stringify(file);
 
         li.classList.add('text-center');
 
