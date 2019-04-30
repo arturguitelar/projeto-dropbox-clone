@@ -3,12 +3,19 @@ class DropboxController
     constructor() {
         // Elementos do DOM
         this.btnSendFileEl = document.querySelector('#btn-send-file');
+        this.btnNewFolderEl = document.querySelector('#btn-new-folder');
+        this.btnRenameEl = document.querySelector('#btn-rename');
+        this.btnDeleteEl = document.querySelector('#btn-delete');
+
         this.inputFilesEl = document.querySelector('#files');
         this.snackModalEl = document.querySelector('#react-snackbar-root');
         this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg');
         this.fileNameEl = this.snackModalEl.querySelector('.filename');
         this.timeLeftEl = this.snackModalEl.querySelector('.timeleft');
         this.listFilesEl = document.querySelector('#list-of-files-and-directories');
+
+        // Evento personalizado
+        this.onSelectionChange = new Event('selectionchange');
 
         // methods
         this.connectFirebase();
@@ -17,51 +24,30 @@ class DropboxController
     }
 
     /**
-     * Configura uma conexão com o Firebase.
-     */
-    connectFirebase() {
-        /**
-         * A classe ConnectFirebase não estará disponível no projeto por questões
-         * de segurança.
-         * Basicamente é um classe simpes com as configurações do 
-         * meu banco de dados no Firebase no construtor.
-         */
-        new ConnectFirebase();
-    }
-
-    /**
-     * Pega uma referência ao firebase que já está global por causa dos imports no html
-     * e configurações do ConnectFirebase.
-     * 
-     * @return Referência a um nó do banco de dados no Firebase.
-     */
-    getFirebaseRef() {
-        return firebase.database().ref('files');
-    }
-
-    /**
-     * Lê os arquivos no banco.
-     */
-    readFiles() {
-        // Nota: neste caso o .on() se encarrega de "ouvir" o evento de alteração no banco.
-        this.getFirebaseRef().on('value', snapshot => {
-            
-            this.listFilesEl.innerHTML = '';
-
-            snapshot.forEach(snapshotItem => {
-                let key = snapshotItem.key;
-                let data = snapshotItem.val();
-
-                // cria as li's com cada referência de arquivo
-                this.listFilesEl.appendChild(this.getFileView(data, key));
-            });
-        });
-    }
-
-    /**
      * Inicia eventos necessários para o funcionamento da aplicação.
      */
     initEvents() {
+
+        // adicionando evento personalizado na lista de ícones
+        this.listFilesEl.addEventListener('selectionchange', event => {
+            switch (this.getSelection().length) {
+                case 0:
+                    this.btnRenameEl.style.display = 'none';
+                    this.btnDeleteEl.style.display = 'none';
+                break;
+            
+                case 1:
+                    this.btnRenameEl.style.display = 'block';
+                    this.btnDeleteEl.style.display = 'block';
+                break;
+
+                default:
+                    this.btnRenameEl.style.display = 'none';
+                    this.btnDeleteEl.style.display = 'block';
+                break;
+            }
+        });
+
         // botão de envio
         this.btnSendFileEl.addEventListener('click', event => {
             this.inputFilesEl.click();
@@ -124,6 +110,8 @@ class DropboxController
                             el.classList.add('selected');
                     });
 
+                    this.listFilesEl.dispatchEvent(this.onSelectionChange);
+
                     return true;
                 }
                 
@@ -138,7 +126,60 @@ class DropboxController
             }
 
             li.classList.toggle('selected');
+
+            this.listFilesEl.dispatchEvent(this.onSelectionChange);
         });
+    }
+
+    /**
+     * Configura uma conexão com o Firebase.
+     */
+    connectFirebase() {
+        /**
+         * A classe ConnectFirebase não estará disponível no projeto por questões
+         * de segurança.
+         * Basicamente é um classe simpes com as configurações do 
+         * meu banco de dados no Firebase no construtor.
+         */
+        new ConnectFirebase();
+    }
+
+    /**
+     * Pega uma referência ao firebase que já está global por causa dos imports no html
+     * e configurações do ConnectFirebase.
+     * 
+     * @return Referência a um nó do banco de dados no Firebase.
+     */
+    getFirebaseRef() {
+        return firebase.database().ref('files');
+    }
+
+    /**
+     * Lê os arquivos no banco.
+     */
+    readFiles() {
+        // Nota: neste caso o .on() se encarrega de "ouvir" o evento de alteração no banco.
+        this.getFirebaseRef().on('value', snapshot => {
+            
+            this.listFilesEl.innerHTML = '';
+
+            snapshot.forEach(snapshotItem => {
+                let key = snapshotItem.key;
+                let data = snapshotItem.val();
+
+                // cria as li's com cada referência de arquivo
+                this.listFilesEl.appendChild(this.getFileView(data, key));
+            });
+        });
+    }
+
+    /**
+     * Retorna todos os itens da lista de ícones que estão com a class "selected".
+     * 
+     * @return {NodeList} Itens com a class Selected.
+     */
+    getSelection() {
+        return this.listFilesEl.querySelectorAll('.selected');
     }
 
     /**

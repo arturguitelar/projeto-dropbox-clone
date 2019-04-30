@@ -12,6 +12,7 @@ Dropbox clone criado para estudo utilizando como base as aulas do [Curso de Java
 - Cálculo para quanto tempo resta para finalizar um upload.
 - [Firebase](https://firebase.google.com).
 - Lógica de seleção de elementos com ctrl e shift.
+- Personalizando eventos.
 
 **Sobre o banco de dados:** 
 Este projeto utiliza o [Firebase](https://firebase.google.com) como banco de dados.
