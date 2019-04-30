@@ -92,6 +92,56 @@ class DropboxController
     }
 
     /**
+     * Adiciona eventos a um elemento li especificado.
+     * 
+     * @param {HTMLLIElement} li 
+     */
+    initEventsLi(li) {
+        li.addEventListener('click', e => {
+
+            if (e.shiftKey) {
+                // necessário encontrar o primeiro elemento selecionado da lista
+                let firstLi = this.listFilesEl.querySelector('.selected');
+
+                if (firstLi) {
+
+                    let indexStart;
+                    let indexEnd;
+                    let lis = li.parentElement.childNodes;
+
+                    lis.forEach((el, index) => {
+                        if (firstLi === el) indexStart = index;
+                        if (li === el) indexEnd = index;
+                    });
+
+                    // Nota: Nem sempre o elemento index menor foi clicado primeiro.
+                    // Neste caso, cria-se um array ordenado para percorrer quais itens no espaço
+                    // entre o index menor e o index maior.
+                    let index = [indexStart, indexEnd].sort()
+
+                    lis.forEach((el, i) => {
+                        if (i >= index[0] && i <= index[1])
+                            el.classList.add('selected');
+                    });
+
+                    return true;
+                }
+                
+            }
+
+            if (!e.ctrlKey) {
+                // Retira-se a classe "selected" de todos os elementos li na ul onde mostra os arquivos,
+                // Para adicionar a classe selected apenas no elemento clicado.
+                this.listFilesEl.querySelectorAll('li.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+            }
+
+            li.classList.toggle('selected');
+        });
+    }
+
+    /**
      * Mostra ou esconde o modal de progresso na tela.
      * 
      * @param {Boolean} show Default: true
@@ -231,11 +281,15 @@ class DropboxController
         let li = document.createElement('li');
         li.dataset.key = key;
 
+        li.classList.add('text-center');
+
         li. innerHTML = `
             ${this.getFileIconView(file)}
-            <div class="name text-center">${file.name}</div>
+            <div class="name" style="max-width: 200px">${file.name}</div>
         `;
-        
+
+        this.initEventsLi(li);
+
         return li;
     }
 
