@@ -14,6 +14,9 @@ class DropboxController
         this.timeLeftEl = this.snackModalEl.querySelector('.timeleft');
         this.listFilesEl = document.querySelector('#list-of-files-and-directories');
 
+        // propriedades
+        this.currentFolder = ['hcode'];
+
         // Evento personalizado
         this.onSelectionChange = new Event('selectionchange');
 
@@ -107,6 +110,19 @@ class DropboxController
 
             // mostra na tela
             this.modalShow();
+        });
+
+        // botão de nova pasta
+        this.btnNewFolderEl.addEventListener('click', event => {
+            let name = prompt('Nome da nova pasta:');
+
+            if (name) {
+                this.getFirebaseRef().push().set({
+                    name,
+                    type: 'folder',
+                    path: this.currentFolder.join('/')
+                });
+            }
         });
     }
 
