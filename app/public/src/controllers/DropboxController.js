@@ -1,20 +1,28 @@
 class DropboxController
 {
     constructor() {
-        // Elementos do DOM
-        this.btnSendFileEl = document.querySelector('#btn-send-file');
+        // botões
         this.btnNewFolderEl = document.querySelector('#btn-new-folder');
         this.btnRenameEl = document.querySelector('#btn-rename');
         this.btnDeleteEl = document.querySelector('#btn-delete');
-
+        
+        // "Enviar arquivos"
+        this.btnSendFileEl = document.querySelector('#btn-send-file');
         this.inputFilesEl = document.querySelector('#files');
+
+        // modal com barra de progresso
         this.snackModalEl = document.querySelector('#react-snackbar-root');
         this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg');
         this.fileNameEl = this.snackModalEl.querySelector('.filename');
         this.timeLeftEl = this.snackModalEl.querySelector('.timeleft');
+        
+        // lista de "arquivos" na tela
         this.listFilesEl = document.querySelector('#list-of-files-and-directories');
+        
+        // breadcrumb
+        this.navEl = document.querySelector('#browse-location');
 
-        // propriedades
+        // referência do folder atual para o Firebase
         this.currentFolder = ['hcode'];
 
         // Evento personalizado
@@ -23,7 +31,7 @@ class DropboxController
         // methods
         this.connectFirebase();
         this.initEvents();
-        this.readFiles();
+        this.openFolder();
     }
 
     /**
@@ -178,6 +186,21 @@ class DropboxController
 
             this.listFilesEl.dispatchEvent(this.onSelectionChange);
         });
+
+        // duplo clique nos arquivos e pastas
+        li.addEventListener('dblclick', event => {
+            let file = JSON.parse(li.dataset.file);
+
+            switch (file.type) {
+                case 'folder':
+                    this.currentFolder.push(file.name);
+                    this.openFolder();
+                break;
+
+                default:
+                    window.open('/file?path=' + file.path);
+            }
+        });
     }
 
     /**
@@ -197,16 +220,38 @@ class DropboxController
      * Pega uma referência ao firebase que já está global por causa dos imports no html
      * e configurações do ConnectFirebase.
      * 
+     * @param path
      * @return Referência a um nó do banco de dados no Firebase.
      */
-    getFirebaseRef() {
-        return firebase.database().ref('files');
+    getFirebaseRef(path) {
+
+        // se não houver um caminho, pega a pasta atual
+        if (!path) path = this.currentFolder.join('/');
+
+        return firebase.database().ref(path);
+    }
+
+    /**
+     * Lê as "pastas".
+     */
+    openFolder() {
+
+        // para de "observar" a pasta anterior
+        if (this.lastFolder) this.getFirebaseRef(this.lastFolder).off('value');
+
+        this.renderNav();
+        
+        this.readFiles();
     }
 
     /**
      * Lê os arquivos no banco.
      */
     readFiles() {
+
+        // lastFolder receb a pasta atual
+        this.lastFolder = this.currentFolder.join('/')
+
         // Nota: neste caso o .on() se encarrega de "ouvir" o evento de alteração no banco.
         this.getFirebaseRef().on('value', snapshot => {
             
@@ -216,8 +261,11 @@ class DropboxController
                 let key = snapshotItem.key;
                 let data = snapshotItem.val();
 
-                // cria as li's com cada referência de arquivo
-                this.listFilesEl.appendChild(this.getFileView(data, key));
+                if (data.type) {
+
+                    // cria as li's com cada referência de arquivo
+                    this.listFilesEl.appendChild(this.getFileView(data, key));
+                }
             });
         });
     }
@@ -612,5 +660,56 @@ class DropboxController
                     </svg>
                 `;
         }
+    }
+
+     /**
+     * Atualiza o breadcrumb na view.
+     */
+    renderNav() {
+
+        let nav = document.createElement('nav');
+        let path = [];
+
+        for (let i = 0; i < this.currentFolder.length; i++) {
+            
+            let span = document.createElement('span');
+            let folderName = this.currentFolder[i];
+
+            path.push(folderName);
+
+            // verifica se a posição atual é a última pasta
+            if ((i + 1) === this.currentFolder.length) {
+
+                span.innerHTML = folderName;
+            } else {
+                
+                span.className = 'breadcrumb-segment__wrapper';
+                span.innerHTML = `
+                    <span class="ue-effect-container uee-BreadCrumbSegment-link-0">
+                        <a href="#" data-path="${path.join('/')}" class="breadcrumb-segment">${folderName}</a>
+                    </span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" class="mc-icon-template-stateless" style="top: 4px; position: relative;">
+                        <title>arrow-right</title>
+                        <path d="M10.414 7.05l4.95 4.95-4.95 4.95L9 15.534 12.536 12 9 8.464z" fill="#637282" fill-rule="evenodd"></path>
+                    </svg>
+                `;
+            }
+
+            nav.appendChild(span);
+        }
+        
+        this.navEl.innerHTML = nav.innerHTML;
+
+        // adicionando eventos para os links de navegação
+        this.navEl.querySelectorAll('a').forEach(a => {
+            a.addEventListener('click', event => {
+                
+                event.preventDefault();
+
+                this.currentFolder = a.dataset.path.split('/');
+
+                this.openFolder();
+            });
+        });
     }
 }

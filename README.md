@@ -13,6 +13,7 @@ Dropbox clone criado para estudo utilizando como base as aulas do [Curso de Java
 - [Firebase](https://firebase.google.com).
 - Lógica de seleção de elementos com ctrl e shift.
 - Personalizando eventos.
+- Sistema de navegação de pastas em página única utilizando javascript.
 
 **Sobre o banco de dados:** 
 Este projeto utiliza o [Firebase](https://firebase.google.com) como banco de dados.
