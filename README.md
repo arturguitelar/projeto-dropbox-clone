@@ -42,6 +42,9 @@ npm start
 
 > Em progresso...
 
+O curso termina no momento em que é possível utilizar propriamente o Firebase Storage. Porém, num futuro, pretendo adicionar outras funcionalidades. =D
+
+
 **Sobre o banco de dados:** 
 Este projeto utiliza o [Firebase](https://firebase.google.com) como banco de dados.
 Por questões de segurança, não estou adicionando o arquivo "ConnectFirebase.js". Ele é só uma classe bem simples onde as configurações do meu banco estão criadas no construtor da classe.
