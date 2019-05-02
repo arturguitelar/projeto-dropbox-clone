@@ -132,8 +132,6 @@ class DropboxController
                         console.error(err);
                     });
                 });
-                
-                console.log('responses', responses);
 
                 this.uploadComplete();
             }).catch(err => {
@@ -244,7 +242,7 @@ class DropboxController
 
     /**
      * Pega uma referência ao firebase que já está global por causa dos imports no html
-     * e configurações do ConnectFirebase.
+     * e configurações da classe ConnectFirebase.
      * 
      * @param path
      * @return Referência a um nó do banco de dados no Firebase.
@@ -397,6 +395,10 @@ class DropboxController
             let file = JSON.parse(li.dataset.file);
             let key = li.dataset.key;
 
+            /* A parte abaixo é sobre o armazenamento local na pasta /upload.
+             * Deixarei esta parte comentada para consultas futuras.
+            */
+            /*
             // dados que serão enviados para o servidor
             let formData = new FormData();
             formData.append('path', file.path);
@@ -405,9 +407,107 @@ class DropboxController
             let promise = this.ajax('/file', 'DELETE', formData);
 
             promises.push(promise);
+            */
+
+            promises.push(new Promise((resolve, reject) => {
+
+                // se for deletar um apasta, deve-se percorrer a pasta e deletar os arquivos dentro
+                if (file.type === 'folder') {
+
+                    this.removeFolder(this.currentFolder.join('/'), file.name).then(() => {
+
+                        resolve({
+                            fields: {
+                                key
+                            }
+                        });
+                    });
+                } else if (file.type) {
+
+                    this.removeFile(this.currentFolder.join('/'), file.name).then(() => {
+                        
+                        resolve({
+                            fields: {
+                                key
+                            }
+                        });
+                    });
+                }
+            }));
         });
 
         return Promise.all(promises);
+    }
+
+    /**
+     * Remove um arquivo do storage.
+     * 
+     * @param ref Referência ao storage.
+     * @param name Nome do arquivo. 
+     * 
+     * @return {Promise} Promise.
+     */
+    removeFile(ref, name) {
+        let fileRef = firebase.storage().ref(ref).child(name);
+
+        return fileRef.delete();
+    }
+
+    /**
+     * Remove uma pasta do storage.
+     * 
+     * @param ref Referência ao storage.
+     * @param name Nome da pasta. 
+     * 
+     * @return {Promise} Promise.
+     */
+    removeFolder(ref, name) {
+        return new Promise((resolve, reject) => {
+            
+            let folderRef = this.getFirebaseRef(ref + '/' + name);
+
+            // para cada item dentro da pasta...
+            folderRef.on('value', snapshot => {
+
+                folderRef.off('value');
+                
+                snapshot.forEach(item => {
+
+                    let data = item.val();
+                    data.key = item.key;
+
+                    if (data.type === 'folder') {
+
+                        this.removeFolder(ref + '/' + name, data.name).then(() => {
+
+                            resolve({
+                                fields: {
+                                    key: data.key
+                                }
+                            });
+                        }).catch(err => {
+
+                            reject(err);
+                        });
+                    } else if(data.type) {
+                        
+                        this.removeFile(ref + '/' + name, data.name).then(() => {
+
+                            resolve({
+                                fields: {
+                                    key: data.key
+                                }
+                            });
+                        }).catch(err => {
+
+                            reject(err);
+                        });
+                    }
+                });
+
+                folderRef.remove();
+            });
+        });
     }
 
     /**
