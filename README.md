@@ -6,6 +6,30 @@ Dropbox clone criado para estudo utilizando como base as aulas do [Curso de Java
 ### Visual do projeto
 ![DropBox Clone](https://firebasestorage.googleapis.com/v0/b/hcode-com-br.appspot.com/o/DropBoxClone.jpg?alt=media&token=d59cad0c-440d-4516-88f2-da904b9bb443)
 
+
+**Comandos básicos.**
+
+Dentro da pasta "app".
+
+Instalar node_modules:
+
+```
+npm install
+```
+
+**Obs.** Instalar componentes do [Bower](https://bower.io/) na pasta "public".
+
+```
+bower install
+```
+
+Start do servidor:
+
+```
+npm start
+```
+
+
 **Coisas interessantes abordadas neste projeto.**
 - [Formidable](https://github.com/felixge/node-formidable).
 - Barra de progresso de upload.
@@ -14,6 +38,8 @@ Dropbox clone criado para estudo utilizando como base as aulas do [Curso de Java
 - Lógica de seleção de elementos com ctrl e shift.
 - Personalizando eventos.
 - Sistema de navegação de pastas em página única utilizando javascript.
+
+> Em progresso...
 
 **Sobre o banco de dados:** 
 Este projeto utiliza o [Firebase](https://firebase.google.com) como banco de dados.
