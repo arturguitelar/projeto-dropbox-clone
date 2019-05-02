@@ -23,7 +23,7 @@ class DropboxController
         this.navEl = document.querySelector('#browse-location');
 
         // referência do folder atual para o Firebase
-        this.currentFolder = ['hcode'];
+        this.currentFolder = ['Killdragon'];
 
         // Evento personalizado
         this.onSelectionChange = new Event('selectionchange');
@@ -104,10 +104,36 @@ class DropboxController
             this.btnSendFileEl.disabled = true;
             
             this.uploadTasks(event.target.files).then(responses => {
+                /* A parte abaixo é referente ao antigo método de armazenamento para a pasta /upload.
+                 * Deixarei o código comentado para referências futuras. */
+                /*
                 responses.forEach(resp => {
                     // Nota: resp.files['input-file'] retorna um json com os dados do arquivo
                     this.getFirebaseRef().push().set(resp.files['input-file']);
                 });
+
+                this.uploadComplete();
+                */
+                
+                responses.forEach(resp => {
+
+                    // Nota: O método getDownloadURL deve ser utilizado a partir do Firebase 5.*
+                    resp.ref.getDownloadURL().then(data => {
+                        
+                        this.getFirebaseRef().push().set({
+                            name: resp.name,
+                            type: resp.contentType,
+                            path: data,
+                            size: resp.size
+                        });
+                    }).catch(err => {
+
+                        this.uploadComplete();
+                        console.error(err);
+                    });
+                });
+                
+                console.log('responses', responses);
 
                 this.uploadComplete();
             }).catch(err => {
@@ -302,6 +328,10 @@ class DropboxController
 
         // Nota: [...files] converte a coleção recebida em files para um array
         [...files].forEach(file => {
+            /* A parte abaixo é sobre o armazenamento local na pasta /upload.
+             * Deixarei esta parte comentada para consultas futuras.
+            */
+            /*
             // Lendo o arquivo com FormData
             let formData = new FormData();
             formData.append('input-file', file);
@@ -316,6 +346,39 @@ class DropboxController
             });
 
             promises.push(promise);
+            */
+
+            /* Os próximos passos são sobre utilização do Firebase Storage para armazenamento de arquivos. */            
+            promises.push(new Promise((resolve, reject) => {
+            
+                // cria um registro para o arquivo dentro do staorage
+                let fileRef = firebase.storage().ref(this.currentFolder.join('/')).child(file.name);
+                
+                // Faz o upload do arquivo na referência
+                let task = fileRef.put(file);
+                
+                // tas.on('state_changed', progress, error, resolve)
+                task.on('state_changed', snapshot => {
+                    
+                    this.uploadProgress({
+                        loaded: snapshot.bytesTransferred,
+                        total: snapshot.totalBytes
+                    }, file);
+                }, error => {
+                    
+                    console.log(error);
+                    reject(error);
+                }, () => {
+                    
+                    fileRef.getMetadata().then(metadata => {
+                        
+                        resolve(metadata);
+                    }).catch(err => {
+                        
+                        reject(err);
+                    });
+                });
+            }));
         });
 
         return Promise.all(promises);

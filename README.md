@@ -38,6 +38,7 @@ npm start
 - Lógica de seleção de elementos com ctrl e shift.
 - Personalizando eventos.
 - Sistema de navegação de pastas em página única utilizando javascript.
+- Armazenamento de arquivos em nuvem com o Firebase Storage.
 
 > Em progresso...
 
